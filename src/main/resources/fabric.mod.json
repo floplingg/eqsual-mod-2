@@ -3,17 +3,28 @@
   "id": "eqsual_cosmetics",
   "version": "${version}",
   "name": "Eqsual Cosmetics",
-  "description": "Free 3D head cosmetics: crowns, hats, seasonal collections. Synced in multiplayer.",
-  "authors": ["floplingg"],
+  "description": "Free 3D head cosmetics \u2014 crowns, hats and seasonal collections (Christmas, Halloween, Easter, Winter). Animated, glowing, synced in multiplayer. No locks, no rarity, no paid items.",
+  "authors": [
+    "floplingg"
+  ],
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
-    "main": ["com.eqsual.cosmetics.EqsualCosmetics"]
+    "main": [
+      "com.eqsual.cosmetics.EqsualCosmetics"
+    ],
+    "client": [
+      "com.eqsual.cosmetics.client.EqsualCosmeticsClient"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.18.1",
     "minecraft": "~1.21.11",
     "java": ">=21",
     "fabric-api": "*"
+  },
+  "icon": "assets/eqsual_cosmetics/icon.png",
+  "contact": {
+    "sources": "https://github.com/floplingg/eqsual-mod-2"
   }
 }
