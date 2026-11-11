@@ -252,9 +252,6 @@ public class CosmeticsScreen extends Screen {
     private void renderPreview(GuiGraphics g, int mouseX, int mouseY, float partial) {
         g.fillGradient(prevX, prevY, prevX + prevW, prevY + prevH, 0xFF262838, 0xFF14151C);
         outline(g, prevX, prevY, prevW, prevH, LINE);
-        // floor glow
-        int fy = prevY + prevH - 22;
-        g.fill(prevX + prevW / 2 - 30, fy, prevX + prevW / 2 + 30, fy + 2, 0x40E23B4A);
 
         LocalPlayer player = this.minecraft.player;
         if (player != null) {
@@ -289,10 +286,10 @@ public class CosmeticsScreen extends Screen {
             avatar.id = ClientCosmetics.PREVIEW_ENTITY_ID;
             avatar.ageInTicks = player.tickCount + partial;
         }
-        int size = (int) ((y2 - y1) / 2.75f);
+        int size = (int) ((y2 - y1) / 3.1f);
         Quaternionf camera = new Quaternionf().rotateX(tilt);
         Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI).mul(camera);
-        Vector3f offset = new Vector3f(0.0F, state.boundingBoxHeight / 2.0F + 0.0625F, 0.0F);
+        Vector3f offset = new Vector3f(0.0F, state.boundingBoxHeight / 2.0F + 0.32F, 0.0F);
         g.submitEntityRenderState(state, size, offset, rotation, camera, x1, y1, x2, y2);
     }
 

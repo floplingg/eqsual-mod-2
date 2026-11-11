@@ -58,5 +58,6 @@ jobs:
               if f in cos: continue
               im = Image.open(f).convert('RGB'); im.thumbnail((960, 960)); im.save(f'{out}/' + os.path.basename(f)[:-4] + '.jpg', quality=85)
           PY
+          cp build/libs/eqsual-cosmetics-*.jar out/ 2>/dev/null || ./gradlew -q build -x test && cp build/libs/eqsual-cosmetics-*.jar out/ || true
           cd out && git init -q && git checkout -q -b ci-screens && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm screens || exit 0
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" ci-screens
