@@ -2,6 +2,11 @@ name: release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag, e.g. v1.0.0"
+        required: true
 permissions:
   contents: write
 jobs:
@@ -13,9 +18,13 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew && ./gradlew build
+      - name: Remove temporary CI screenshot branch
+        run: git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" --delete ci-screens || true
       - uses: softprops/action-gh-release@v2
         with:
-          name: Eqsual Cosmetics ${{ github.ref_name }} (Fabric 1.21.11)
+          tag_name: ${{ inputs.version || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: Eqsual Cosmetics ${{ inputs.version || github.ref_name }} (Fabric 1.21.11)
           files: |
             build/libs/eqsual-cosmetics-*.jar
           body: |
