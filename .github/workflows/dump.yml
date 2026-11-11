@@ -18,7 +18,7 @@ jobs:
         run: |
           mkdir -p src-mc
           find ~/.gradle .gradle -name "*.jar" 2>/dev/null | grep -iE "sources" | head -40 > jars.txt
-          for j in $(find ~/.gradle .gradle -name "*sources.jar" 2>/dev/null | grep -iE "minecraft|fabric" ); do (cd src-mc && unzip -oq "$j" '*.java' 2>/dev/null || true); done
+          for j in $(find ~/.gradle $PWD/.gradle -name "*sources.jar" 2>/dev/null | grep -iE "minecraft|fabric" ); do (cd src-mc && unzip -oq "$j" '*.java' 2>/dev/null || true); done
           echo "files: $(find src-mc -name '*.java' | wc -l)" >> jars.txt
           cat gen.log >> jars.txt
       - name: Run
