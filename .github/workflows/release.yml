@@ -1,0 +1,22 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew && ./gradlew build
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Eqsual Cosmetics ${{ github.ref_name }} (Fabric 1.21.11)
+          files: |
+            build/libs/eqsual-cosmetics-*.jar
+          body: |
+            Free 3D head cosmetics for Fabric 1.21.11. Download `eqsual-cosmetics-<version>.jar` (not `-sources`) and drop it into `.minecraft/mods` together with Fabric API.

@@ -59,11 +59,15 @@ public class CosmeticsClientGameTest implements FabricClientGameTest {
                 context.takeScreenshot("cos_" + def.id());
             }
 
-            // Combined loadout from the back
+            // Combined loadout: crown + halo (halo must float above the crown), front then back
             context.runOnClient(client -> {
                 ClientCosmetics.unequipAll();
                 ClientCosmetics.equip(CosmeticRegistry.get("royal_crown"));
                 ClientCosmetics.equip(CosmeticRegistry.get("halo"));
+            });
+            context.waitTicks(3);
+            context.takeScreenshot("cos_zz_loadout_front");
+            context.runOnClient(client -> {
                 client.options.setCameraType(CameraType.THIRD_PERSON_BACK);
                 client.player.setXRot(35);
             });

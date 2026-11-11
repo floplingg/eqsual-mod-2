@@ -21,6 +21,8 @@ import net.minecraft.client.renderer.entity.state.AvatarRenderState;
  */
 public class CosmeticLayer<M extends EntityModel<AvatarRenderState> & HeadedModel> extends RenderLayer<AvatarRenderState, M> {
 
+    private static final float HALO_BASE_Y = 3.2F;
+
     public CosmeticLayer(RenderLayerParent<AvatarRenderState, M> parent) {
         super(parent);
     }
@@ -41,8 +43,20 @@ public class CosmeticLayer<M extends EntityModel<AvatarRenderState> & HeadedMode
         // head bone space (blocks, Y down, face towards -Z)  ->  cosmetic space (pixels, Y up, face towards +Z)
         poseStack.translate(0.0F, -0.5F, 0.0F);
         poseStack.scale(1.0F / 16.0F, -1.0F / 16.0F, -1.0F / 16.0F);
+        // Halos float just above whatever else is worn (crowns, hats, ears) instead of clipping into it.
+        float headTop = 0f;
         for (CosmeticDef def : loadout) {
-            CosmeticModel.get(def).submit(poseStack, collector, light, overlay, state.ageInTicks, cfg.animations, cfg.glow);
+            if (def.slot() != CosmeticDef.Slot.HALO) headTop = Math.max(headTop, CosmeticModel.get(def).maxY());
+        }
+        for (CosmeticDef def : loadout) {
+            CosmeticModel model3d = CosmeticModel.get(def);
+            boolean lift = def.slot() == CosmeticDef.Slot.HALO && headTop > 1.5f;
+            if (lift) {
+                poseStack.pushPose();
+                poseStack.translate(0.0F, headTop + 1.2F - HALO_BASE_Y, 0.0F);
+            }
+            model3d.submit(poseStack, collector, light, overlay, state.ageInTicks, cfg.animations, cfg.glow);
+            if (lift) poseStack.popPose();
         }
         poseStack.popPose();
     }

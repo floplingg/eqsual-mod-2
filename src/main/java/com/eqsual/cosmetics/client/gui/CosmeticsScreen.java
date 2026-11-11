@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -52,11 +53,11 @@ public class CosmeticsScreen extends Screen {
     private static final String FILTER_FAV = "★ Favorites";
     private static final String FILTER_EQUIPPED = "Equipped";
 
-    private static final int CARD_W = 58, CARD_H = 56, GAP = 4;
+    private static final int CARD_W = 62, CARD_H = 60, GAP = 4;
 
     private static String lastFilter = FILTER_ALL;
     private static String lastSearch = "";
-    private static float lastSpin = 200f;
+    private static float lastSpin = -25f;
 
     private int px, py, pw, ph;              // outer panel
     private int prevX, prevY, prevW, prevH;  // preview box
@@ -347,9 +348,12 @@ public class CosmeticsScreen extends Screen {
             outline(g, cx, cy, CARD_W, CARD_H, sel ? ACCENT : (eq ? GREEN : LINE));
             if (sel) outline(g, cx + 1, cy + 1, CARD_W - 2, CARD_H - 2, 0x80E23B4A);
             int icon = d.icon();
-            g.blit(RenderPipelines.GUI_TEXTURED, ICONS, cx + (CARD_W - 32) / 2, cy + 5, (icon % 8) * 32f, (icon / 8) * 32f, 32, 32, 256, 256);
-            String name = this.font.plainSubstrByWidth(d.name(), CARD_W - 4);
-            g.drawCenteredString(this.font, name, cx + CARD_W / 2, cy + CARD_H - 13, eq ? GREEN : TEXT);
+            g.blit(RenderPipelines.GUI_TEXTURED, ICONS, cx + (CARD_W - 32) / 2, cy + 4, (icon % 8) * 32f, (icon / 8) * 32f, 32, 32, 256, 256);
+            List<FormattedCharSequence> lines = this.font.split(Component.literal(d.name()), CARD_W - 4);
+            int ly = lines.size() > 1 ? cy + CARD_H - 21 : cy + CARD_H - 13;
+            for (int li = 0; li < Math.min(2, lines.size()); li++) {
+                g.drawCenteredString(this.font, lines.get(li), cx + CARD_W / 2, ly + li * 9, eq ? GREEN : TEXT);
+            }
             boolean fav = ClientCosmetics.isFavorite(d);
             boolean starHover = hover && mouseX >= cx + CARD_W - 12 && mouseY < cy + 12;
             if (fav || hover) g.drawString(this.font, fav ? "★" : "☆", cx + CARD_W - 9, cy + 3, fav ? GOLD : (starHover ? GOLD : MUTED), false);
@@ -382,11 +386,16 @@ public class CosmeticsScreen extends Screen {
         g.drawString(this.font, Component.literal(selected.name()).withColor(TEXT)
                 .append(Component.literal(eq ? "  ✔ Equipped" : "  · Previewing").withColor(eq ? GREEN : MUTED)), x + 6, infoY + 5, TEXT, false);
         String meta = selected.slot().label + " · " + String.join(", ", selected.categories()) + " · Free";
-        g.drawString(this.font, this.font.plainSubstrByWidth(meta, textW), x + 6, infoY + 16, GOLD, false);
-        g.drawString(this.font, this.font.plainSubstrByWidth(selected.description(), textW), x + 6, infoY + 27, MUTED, false);
+        g.drawString(this.font, ellipsize(meta, textW), x + 6, infoY + 16, GOLD, false);
+        g.drawString(this.font, ellipsize(selected.description(), textW), x + 6, infoY + 27, MUTED, false);
         String sync = ClientCosmetics.serverSupported() ? "● Synced" : "● Local only";
         g.drawString(this.font, sync, x + w - 6 - this.font.width(sync), infoY + 5,
                 ClientCosmetics.serverSupported() ? GREEN : 0xFFB0B3C6, false);
+    }
+
+    private String ellipsize(String s, int width) {
+        if (this.font.width(s) <= width) return s;
+        return this.font.plainSubstrByWidth(s, width - this.font.width("…")) + "…";
     }
 
     private static void outline(GuiGraphics g, int x, int y, int w, int h, int color) {

@@ -47,6 +47,7 @@ public final class CosmeticModel {
     private final List<Part> solid = new ArrayList<>();
     private final List<Part> translucent = new ArrayList<>();
     private final List<Part> glowing = new ArrayList<>();
+    private float maxY = 0f;
 
     public static CosmeticModel get(CosmeticDef def) {
         return CACHE.computeIfAbsent(def.id(), id -> new CosmeticModel(def.parts()));
@@ -59,8 +60,12 @@ public final class CosmeticModel {
             if (p.glow) glowing.add(p);
             else if (p.translucent) translucent.add(p);
             else solid.add(p);
+            for (int i = 0; i < 8; i++) maxY = Math.max(maxY, p.corners[i * 3 + 1]);
         }
     }
+
+    /** Highest point of the model (pixels above the top of the head). */
+    public float maxY() { return maxY; }
 
     /**
      * Submits this model for drawing. The pose stack must already be in cosmetic model space.
