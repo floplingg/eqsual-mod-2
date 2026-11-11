@@ -13,18 +13,20 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       - uses: gradle/actions/setup-gradle@v4
-      - run: chmod +x gradlew && ./gradlew genSources --no-configuration-cache -q || true
+      - run: chmod +x gradlew && ./gradlew genSources 2>&1 | tail -15 > gen.log || true
       - name: Extract
         run: |
           mkdir -p src-mc
-          for j in $(find ~/.gradle .gradle -name "*sources.jar" 2>/dev/null | grep -iE "minecraft|fabric-api|fabric-.*-v[0-9]" ); do (cd src-mc && unzip -oq "$j" '*.java' 2>/dev/null || true); done
-          echo "files: $(find src-mc -name '*.java' | wc -l)"
+          find ~/.gradle .gradle -name "*.jar" 2>/dev/null | grep -iE "sources" | head -40 > jars.txt
+          for j in $(find ~/.gradle .gradle -name "*sources.jar" 2>/dev/null | grep -iE "minecraft|fabric" ); do (cd src-mc && unzip -oq "$j" '*.java' 2>/dev/null || true); done
+          echo "files: $(find src-mc -name '*.java' | wc -l)" >> jars.txt
+          cat gen.log >> jars.txt
       - name: Run
         env:
           SCRIPT: ${{ inputs.script }}
         run: |
           cd src-mc
-          bash -c "$SCRIPT" > ../out.txt 2>&1 || true
+          cat ../jars.txt > ../out.txt; bash -c "$SCRIPT" >> ../out.txt 2>&1 || true
           cd ..
           python3 - <<'PY'
           t=open('out.txt').read()
