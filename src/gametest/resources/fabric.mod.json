@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "eqsual_cosmetics_test",
+  "version": "1.0.0",
+  "name": "Eqsual Cosmetics Tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-client-gametest": ["com.eqsual.cosmetics.test.CosmeticsClientGameTest"]
+  },
+  "depends": { "eqsual_cosmetics": "*" }
+}

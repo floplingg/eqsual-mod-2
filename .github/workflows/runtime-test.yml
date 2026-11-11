@@ -1,0 +1,59 @@
+name: runtime-test
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  client-gametest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: sudo apt-get update -q && sudo apt-get install -yq xvfb mesa-utils
+      - run: chmod +x gradlew
+      - name: Run client game test
+        run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest --stacktrace 2>&1 | tee test.log; exit ${PIPESTATUS[0]}
+      - name: Report
+        if: always()
+        run: |
+          grep -nE "Exception|Error|Caused by|FAIL|Check failed|AssertionError|eqsual" test.log | grep -v "^.*DEBUG" | head -c 30000 > rep.txt || true
+          tail -c 8000 test.log >> rep.txt
+          python3 - <<'PY'
+          t=open('rep.txt').read()
+          t=t.replace('%','%25').replace('\r','').replace('\n','%0A')
+          n=0
+          for i in range(0, len(t), 4000):
+              lvl='notice' if n<10 else ('warning' if n<20 else 'error')
+              print('::%s title=dump%d::%s' % (lvl, n, t[i:i+4000])); n+=1
+              if n>=30: break
+          PY
+      - name: Publish screenshots to ci-screens branch
+        if: always()
+        run: |
+          pip install -q pillow || true
+          mkdir -p shots && find . -path "*screenshots*" -name "*.png" -exec cp {} shots/ \; ; ls shots | head -50
+          python3 - <<'PY'
+          import os, glob
+          from PIL import Image, ImageDraw
+          files = sorted(glob.glob('shots/*.png'))
+          out = 'out'; os.makedirs(out, exist_ok=True)
+          cos = [f for f in files if os.path.basename(f).startswith('cos_') or 'cos_' in os.path.basename(f)]
+          if cos:
+              tiles = []
+              for f in cos:
+                  im = Image.open(f).convert('RGB'); w, h = im.size
+                  c = im.crop((w//2 - h//4, h//8, w//2 + h//4, h//8 + h//2)).resize((220, 220))
+                  ImageDraw.Draw(c).text((4, 4), os.path.basename(f)[:40], fill=(255, 255, 0))
+                  tiles.append(c)
+              cols = 4; rows = (len(tiles) + cols - 1) // cols
+              sheet = Image.new('RGB', (cols * 220, rows * 220))
+              for i, t in enumerate(tiles): sheet.paste(t, ((i % cols) * 220, (i // cols) * 220))
+              sheet.save(f'{out}/contact.jpg', quality=82)
+          for f in files:
+              if f in cos: continue
+              im = Image.open(f).convert('RGB'); im.thumbnail((960, 960)); im.save(f'{out}/' + os.path.basename(f)[:-4] + '.jpg', quality=85)
+          PY
+          cd out && git init -q && git checkout -q -b ci-screens && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm screens || exit 0
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" ci-screens
