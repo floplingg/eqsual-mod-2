@@ -1,0 +1,41 @@
+name: build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      dump:
+        description: "Dump Minecraft source signatures (dev)"
+        required: false
+        default: "false"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Build
+        id: build
+        run: ./gradlew build --stacktrace 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
+      - name: Report compile errors
+        if: failure()
+        run: |
+          grep -E "error:|warning: \[|FAILURE|What went wrong" -A3 build.log | head -c 60000 > errs.txt || true
+          python3 - <<'PY'
+          import re
+          t=open('errs.txt').read() or open('build.log').read()[-60000:]
+          t=t.replace('%','%25').replace('\r','').replace('\n','%0A')
+          for i in range(0, min(len(t), 9*60000), 60000):
+              print('::error title=build%d::%s' % (i//60000, t[i:i+60000]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: eqsual-cosmetics
+          path: build/libs/*.jar

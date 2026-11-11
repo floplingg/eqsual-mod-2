@@ -1,0 +1,37 @@
+name: dump-sources
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: "bash run against extracted sources dir ./src-mc"
+        required: true
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew && ./gradlew genSources --no-configuration-cache -q || true
+      - name: Extract
+        run: |
+          mkdir -p src-mc
+          for j in $(find ~/.gradle .gradle -name "*sources.jar" 2>/dev/null | grep -iE "minecraft|fabric-api|fabric-.*-v[0-9]" ); do (cd src-mc && unzip -oq "$j" '*.java' 2>/dev/null || true); done
+          echo "files: $(find src-mc -name '*.java' | wc -l)"
+      - name: Run
+        env:
+          SCRIPT: ${{ inputs.script }}
+        run: |
+          cd src-mc
+          bash -c "$SCRIPT" > ../out.txt 2>&1 || true
+          cd ..
+          python3 - <<'PY'
+          t=open('out.txt').read()
+          t=t.replace('%','%25').replace('\r','').replace('\n','%0A')
+          n=0
+          for i in range(0, len(t), 60000):
+              lvl='notice' if n<10 else ('warning' if n<20 else 'error')
+              print('::%s title=dump%d::%s' % (lvl, n, t[i:i+60000])); n+=1
+              if n>=30: break
+          PY

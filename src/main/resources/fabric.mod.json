@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "eqsual_cosmetics",
+  "version": "${version}",
+  "name": "Eqsual Cosmetics",
+  "description": "Free 3D head cosmetics: crowns, hats, seasonal collections. Synced in multiplayer.",
+  "authors": ["floplingg"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.eqsual.cosmetics.EqsualCosmetics"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
