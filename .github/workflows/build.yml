@@ -26,13 +26,13 @@ jobs:
       - name: Report compile errors
         if: failure()
         run: |
-          grep -E "error:|warning: \[|FAILURE|What went wrong" -A3 build.log | head -c 60000 > errs.txt || true
+          grep -E "error:|warning: \[|FAILURE|What went wrong" -A3 build.log | head -c 4000 > errs.txt || true
           python3 - <<'PY'
           import re
-          t=open('errs.txt').read() or open('build.log').read()[-60000:]
+          t=open('errs.txt').read() or open('build.log').read()[-4000:]
           t=t.replace('%','%25').replace('\r','').replace('\n','%0A')
-          for i in range(0, min(len(t), 9*60000), 60000):
-              print('::error title=build%d::%s' % (i//60000, t[i:i+60000]))
+          for i in range(0, min(len(t), 9*4000), 4000):
+              print('::error title=build%d::%s' % (i//4000, t[i:i+4000]))
           PY
       - uses: actions/upload-artifact@v4
         if: success()
