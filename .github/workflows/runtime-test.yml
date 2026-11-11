@@ -18,8 +18,9 @@ jobs:
       - name: Report
         if: always()
         run: |
-          grep -nE "Exception|Error|Caused by|FAIL|Check failed|AssertionError|eqsual" test.log | grep -v "^.*DEBUG" | head -c 30000 > rep.txt || true
-          tail -c 8000 test.log >> rep.txt
+          grep -vE "flite|narrator|Realms|^\s+at |\.\.\. [0-9]+ more|Suppressed" test.log | cut -c1-400 | grep -nE "ERROR|Exception|Caused by|FAIL|Check failed|AssertionError|Gametest|gametest|What went wrong|eqsual|Crash|crash" | head -c 40000 > rep.txt || true
+          echo "----- TAIL -----" >> rep.txt
+          grep -vE "^\s+at |flite" test.log | cut -c1-400 | tail -n 60 >> rep.txt
           python3 - <<'PY'
           t=open('rep.txt').read()
           t=t.replace('%','%25').replace('\r','').replace('\n','%0A')
